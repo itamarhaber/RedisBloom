@@ -1,117 +1,15 @@
 version: 2
 jobs:
-  build:
-    docker:
-      - image: 'redislabsmodules/rmbuilder:latest'
-    steps:
-      - checkout
-      - run:
-          name: Build
-          command: make -j 8
-      - run:
-          name: Test
-          command: make test
-      - run:
-          name: Persist Artifacts
-          command: >-
-            mkdir -p /workspace/build && cp $MODULE_ARTIFACT /workspace/ && cp ramp.yml /workspace
-      - persist_to_workspace:
-          root: /workspace
-          paths:
-            - '*.so'
-            - ramp.yml
-            - build
-      - run:
-          name: Coverage
-          command: >-
-            apt-get update &&
-            apt-get install -y lcov curl &&
-            make coverage &&
-            bash <(curl -s https://codecov.io/bash)
-
-  package_branch:
-    docker:
-      - image: 'redislabsmodules/rmbuilder:latest'
-    steps:
-      - attach_workspace:
-          at: /workspace
-      - run:
-          name: Package
-          command: >-
-            ramp pack -m /workspace/ramp.yml -o
-            /workspace/build/$PACKAGE_NAME.{os}-{architecture}.$CIRCLE_BRANCH.zip
-            /workspace/$MODULE_ARTIFACT
-      - persist_to_workspace:
-          root: /workspace
-          paths:
-            - build
-      - store_artifacts:
-          path: /workspace/build
-  package_release:
-    docker:
-      - image: 'redislabsmodules/rmbuilder:latest'
-    steps:
-      - attach_workspace:
-          at: /workspace
-      - run:
-          name: Package
-          command: >-
-            ramp pack -m /workspace/ramp.yml -o
-            /workspace/build/$PACKAGE_NAME.{os}-{architecture}.{semantic_version}.zip
-            /workspace/$MODULE_ARTIFACT
-      - run:
-          name: Package
-          command: >-
-            ramp pack -m /workspace/ramp.yml -o
-            /workspace/build/$PACKAGE_NAME.{os}-{architecture}.latest.zip
-            /workspace/$MODULE_ARTIFACT
-      - persist_to_workspace:
-          root: /workspace
-          paths:
-            - build
-      - store_artifacts:
-          path: /workspace/build
-  deploy_branch:
-    docker:
-      - image: 'redislabsmodules/rmbuilder:latest'
-    steps:
-      - attach_workspace:
-          at: /workspace
-      - run:
-          name: Deploy to S3
-          command: >-
-            aws s3 cp /workspace/build/ s3://redismodules/$PACKAGE_NAME/ --acl
-            public-read --recursive --exclude "*" --include "*.zip"
-  deploy_release:
-    docker:
-      - image: 'redislabsmodules/rmbuilder:latest'
-    steps:
-      - attach_workspace:
-          at: /workspace
-      - run:
-          name: Deploy to S3
-          command: >-
-            aws s3 cp /workspace/build/ s3://redismodules/$PACKAGE_NAME/ --acl
-            public-read --recursive --exclude "*" --include "*.zip"
-
   deploy_docs:
     docker:
-      - image: 'redislabsmodules/rmbuilder:latest'
+      - image: 'debian:buster'
     steps:
-      - checkout
       - run:
-          name: Build Docs
-          command: mkdocs build
-      - run:
-          name: Deploy Docs to S3
-          command: >-
-            aws s3 cp site s3://oss.redislabs.com/$WEBSITE_FOLDER/ --acl
-            public-read --recursive
-
-  deploy_versioned_docs:
-    docker:
-      - image: 'circleci/python:3.8'
-    steps:
+          name: Setup executor
+          command: |
+            apt-get -qq update
+            apt-get -q install -y git openssh-client curl ca-certificates make tar gzip
+            bash <(curl -fsSL https://get.docker.com)
       - checkout
       - setup_remote_docker
       - run:
@@ -122,45 +20,25 @@ jobs:
           # Need:
           # * $REPO_OWNER, $REPO_NAME, STRUCTOR_LATEST_TAG
           command: >-
-            sudo ./structor
+            ./structor
             -o itamarhaber -r redisbloom
             --exp-branch=master --debug
             -d https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/docs.Dockerfile
             --menu.js-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.js.gotmpl"
             --menu.css-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.css"
+      # - run:
+      #     name: Deploy Docs to S3
+      #     command: >-
+      #       aws s3 cp site s3://oss.redislabs.com/$WEBSITE_FOLDER/
+      #       --acl public-read --recursive
 
 workflows:
   version: 2
-  build_and_package:
+  docs_website:
     jobs:
-      - build:
-          filters:
-            tags:
-              only: /.*/
-      - package_branch:
-          requires:
-            - build
+      - deploy_docs:
           filters:
             branches:
-              only: master
-      - package_release:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: '/^v[0-9].*/'
-      - deploy_branch:
-          requires:
-            - package_branch
-      - deploy_release:
-          filters:
-            tags:
-              only: '/^v[0-9].*/'
-          requires:
-            - package_release
-      - deploy_versioned_docs:
-          filters:
-            branches:
-              only: master
+              only:
+                - master
+                - /^v[0-9].*/
