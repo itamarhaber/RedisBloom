@@ -1,0 +1,24 @@
+name: Documentation website
+
+on: [push]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Get structor
+      run: curl -sfL https://raw.githubusercontent.com/containous/structor/master/godownloader.sh | bash -s -- -b . v1.10.0
+    - name: env
+      run: printenv
+    - name: Build docs
+      run: >-
+        sudo ./structor
+        -o itamarhaber -r redisbloom
+        --exp-branch=master --debug
+        -d https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/docs.Dockerfile
+        --menu.js-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.js.gotmpl"
+        --menu.css-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.css"
