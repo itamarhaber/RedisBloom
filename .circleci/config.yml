@@ -20,7 +20,7 @@ jobs:
           # Need:
           # * $REPO_OWNER, $REPO_NAME, STRUCTOR_LATEST_TAG
           command: >-
-            ./structor
+            STRUCTOR_LATEST_TAG=v2.2.0 ./structor
             -o itamarhaber -r redisbloom
             --exp-branch=master --debug
             -d https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/docs.Dockerfile
