@@ -161,8 +161,7 @@ workflows:
               only: '/^v[0-9].*/'
           requires:
             - package_release
-      - deploy_docs:
+      - deploy_versioned_docs:
           filters:
             branches:
               only: master
-
