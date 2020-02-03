@@ -13,4 +13,12 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
     - name: Get structor
-      run: command: curl -sfL https://raw.githubusercontent.com/containous/structor/master/godownloader.sh | bash -s -- -b . v1.10.0
+      run: curl -sfL https://raw.githubusercontent.com/containous/structor/master/godownloader.sh | bash -s -- -b . v1.10.0
+    - name: Build docs
+      run: >-
+        sudo ./structor
+        -o itamarhaber -r redisbloom
+        --exp-branch=master --debug
+        -d https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/docs.Dockerfile
+        --menu.js-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.js.gotmpl"
+        --menu.css-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.css"
