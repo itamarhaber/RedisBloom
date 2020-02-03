@@ -23,7 +23,7 @@ jobs:
             - build
       - run:
           name: Coverage
-          command: >- 
+          command: >-
             apt-get update &&
             apt-get install -y lcov curl &&
             make coverage &&
@@ -93,7 +93,7 @@ jobs:
           command: >-
             aws s3 cp /workspace/build/ s3://redismodules/$PACKAGE_NAME/ --acl
             public-read --recursive --exclude "*" --include "*.zip"
- 
+
   deploy_docs:
     docker:
       - image: 'redislabsmodules/rmbuilder:latest'
@@ -106,7 +106,30 @@ jobs:
           name: Deploy Docs to S3
           command: >-
             aws s3 cp site s3://oss.redislabs.com/$WEBSITE_FOLDER/ --acl
-            public-read --recursive 
+            public-read --recursive
+
+  deploy_versioned_docs:
+    docker:
+      - image: 'circleci/python:3.8'
+    steps:
+      - checkout
+      - run:
+          name: Get structor
+          command: curl -sfL https://raw.githubusercontent.com/containous/structor/master/godownloader.sh | bash -s -- -b . v1.10.0
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build docs
+          # Need:
+          # * $REPO_OWNER, $REPO_NAME, STRUCTOR_LATEST_TAG
+          command: >-
+            sudo ./structor
+            -o itamarhaber -r redisbloom
+            --exp-branch=master --debug
+            -d https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/docs.Dockerfile
+            --menu.js-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.js.gotmpl"
+            --menu.css-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.css"
+
 workflows:
   version: 2
   build_and_package:
@@ -142,4 +165,4 @@ workflows:
           filters:
             branches:
               only: master
-            
+
