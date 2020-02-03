@@ -113,11 +113,10 @@ jobs:
       - image: 'circleci/python:3.8'
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Get structor
           command: curl -sfL https://raw.githubusercontent.com/containous/structor/master/godownloader.sh | bash -s -- -b . v1.10.0
-      - setup_remote_docker:
-          docker_layer_caching: true
       - run:
           name: Build docs
           # Need:
