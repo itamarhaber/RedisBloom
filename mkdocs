@@ -4,7 +4,6 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 mkdir -p $HERE/bin
 wget -q -O bin/structor http://redismodules.s3.amazonaws.com/lab/13-structor/structor
-exit 0
 STRUCTOR_LATEST_TAG=v2.2.0
 $HERE/bin/structor \
 	-o itamarhaber \
