@@ -13,24 +13,8 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Get structor
-          command: curl -sfL https://raw.githubusercontent.com/containous/structor/master/godownloader.sh | bash -s -- -b . v1.10.0
-      - run:
           name: Build docs
-          # Need:
-          # * $REPO_OWNER, $REPO_NAME, STRUCTOR_LATEST_TAG
-          command: >-
-            STRUCTOR_LATEST_TAG=v2.2.0 ./structor
-            -o itamarhaber -r redisbloom
-            --exp-branch=master --debug
-            -d https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/docs.Dockerfile
-            --menu.js-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.js.gotmpl"
-            --menu.css-url="https://raw.githubusercontent.com/RedisLabsModules/etc-structor/master/structor-menu.css"
-      # - run:
-      #     name: Deploy Docs to S3
-      #     command: >-
-      #       aws s3 cp site s3://oss.redislabs.com/$WEBSITE_FOLDER/
-      #       --acl public-read --recursive
+          command: ./mkdocs
 
 workflows:
   version: 2
@@ -38,7 +22,5 @@ workflows:
     jobs:
       - deploy_docs:
           filters:
-            branches:
-              only:
-                - master
-                - /^v[0-9].*/
+            tags:
+              only: /.*/
