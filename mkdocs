@@ -13,4 +13,5 @@ $HERE/bin/structor \
 	-d https://gist.githubusercontent.com/itamarhaber/5124fc446d0fec2cfff914c237796cbf/raw/66aeb7a6c11f3079015489fb6cd825768d64c6b2/docs.Dockerfile \
 	--menu.js-url="https://gist.githubusercontent.com/itamarhaber/5124fc446d0fec2cfff914c237796cbf/raw/c4d7014a37bed971312363ee53f0aafd053c84c7/versions-menu.js.gotmpl" \
 	--exp-branch=master \
-	--debug
+	--debug \
+	--no-volume
